@@ -1,47 +1,21 @@
-version: '3.7'
+version: '3.0'
 
 services:
-  nginx:
-    build: ./nginx
+  db:
+    image: mysql:5.7
     ports:
-      - 1300:80
-    volumes:
-      - static_volume:/home/ubuntu/microservice/static
-    depends_on:
-      - web
-    restart: "on-failure"
+      - '3307:3307'
+    environment:
+       MYSQL_DATABASE: 'myproject3'
+       MYSQL_USER: 'deepak3'
+       MYSQL_PASSWORD: '2052'
+       MYSQL_ROOT_PASSWORD: '2052'
   web:
-    build: . #build the image for the web service from the dockerfile in parent directory
-    command: sh -c "python manage.py makemigrations &&
-                    python manage.py migrate &&
-                    python manage.py initiate_admin &&
-                    python manage.py collectstatic &&
-                    gunicorn sampleApp.wsgi:application --bind 0.0.0.0:${APP_PORT}"
+    build: .
+    command: python manage.py runserver 0.0.0.0:8000
     volumes:
-      - .:/microservice:rw # map data and files from parent directory in host to microservice directory in docker containe
-      - static_volume:/home/app/microservice/static
-    env_file:
-      - .env
-    image: sampleapp
-
-    expose:
-      - ${APP_PORT}
-    restart: "on-failure"
+      - .:/GB
+    ports:
+      - "8000:8000"
     depends_on:
       - db
-  db:
-    image: postgres:11-alpine
-    volumes:
-      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
-      - postgres_data:/var/lib/postgresql/data/
-    environment:
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-      - POSTGRES_DB=${DB_NAME}
-      - PGPORT=${DB_PORT}
-      - POSTGRES_USER=${POSTGRES_USER}
-    restart: "on-failure"
-
-
-volumes:
-  postgres_data:
-  static_volume:
